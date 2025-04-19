@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Sfida Velocità Goal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    th {
+      background-color: #444;
+      color: white;
+    }
+    .done {
+      background-color: #4CAF50;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sfida Velocità Goal (100–150 km/h)</h1>
+  <h3>Seleziona chi sei:</h3>
+  <select id="player">
+    <option value="tu">Tu</option>
+    <option value="amarildo">Amarildo</option>
+  </select>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Velocità</th>
+        <th>Tu</th>
+        <th>Amarildo</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- Popolato da JS -->
+    </tbody>
+  </table>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      databaseURL: "https://sfida-velocita-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const tbody = document.getElementById("table-body");
+
+    for (let i = 100; i <= 150; i++) {
+      const row = document.createElement("tr");
+      const speedCell = document.createElement("td");
+      speedCell.textContent = i + " km/h";
+      row.appendChild(speedCell);
+
+      ["tu", "amarildo"].forEach(player => {
+        const td = document.createElement("td");
+        td.id = `${player}-${i}`;
+        td.addEventListener("click", () => {
+          const selected = document.getElementById("player").value;
+          if (selected === player) {
+            const ref = db.ref(`velocita/${i}/${player}`);
+            ref.set(true);
+          }
+        });
+        row.appendChild(td);
+      });
+
+      tbody.appendChild(row);
+    }
+
+    // Aggiornamento in tempo reale
+    for (let i = 100; i <= 150; i++) {
+      ["tu", "amarildo"].forEach(player => {
+        const cellId = `${player}-${i}`;
+        const cellRef = db.ref(`velocita/${i}/${player}`);
+        const cell = document.getElementById(cellId);
+
+        cellRef.on("value", snapshot => {
+          const clicked = snapshot.val();
+          if (clicked) {
+            cell.classList.add("done");
+          } else {
+            cell.classList.remove("done");
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>
